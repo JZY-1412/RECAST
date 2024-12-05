@@ -1,3 +1,3 @@
 # RECAST
 
-The implementation code of RECAST will be published here.
+This is the implementation code of RECAST.
