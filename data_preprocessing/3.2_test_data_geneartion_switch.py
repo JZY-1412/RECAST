@@ -12,9 +12,6 @@ from tqdm import tqdm
 
 
 def define_args():
-    """
-    定义参数
-    """
 
     parser = argparse.ArgumentParser()
 
@@ -42,25 +39,16 @@ def define_args():
 
 
 def load_data(data_path):
-    """
-    读取数据
-    """
     dataset = pkl.load(open(data_path, "rb"))
     return dataset
 
 
 def generate_graph(adjlist_path):
-    """
-    根据邻接列表创建图
-    """
     graph = nx.read_adjlist(adjlist_path, create_using=nx.DiGraph, nodetype=int)
     return graph
 
 
 def plot_road_network(edges_shp_path, nodes_shp_path, plot_path, trajs=None, edge_color="blue"):
-    """
-    绘制地图
-    """ 
     edges_gdf = gpd.read_file(edges_shp_path)
     edges_gdf = edges_gdf.set_index(['u','v','key'])
     nodes_gdf = gpd.read_file(nodes_shp_path)
@@ -86,9 +74,6 @@ def plot_road_network(edges_shp_path, nodes_shp_path, plot_path, trajs=None, edg
 
 
 def create_SD_traj_count_dict(dataset):
-    """
-    创建字典, {sd: {traj: count, ...}, ...}
-    """
     sd_traj_count_dict = {}  # {sd_pair: {traj: count}}
     for traj in dataset:
         s = traj[0]
@@ -106,9 +91,6 @@ def create_SD_traj_count_dict(dataset):
 
 
 def create_SD_traj_dict(dataset):
-    """
-    创建字典, {sd: {traj, ...}, ...}
-    """
     sd_traj_dict = {}  # {sd_pair: {traj}}
     for traj in dataset:
         s = traj[0]
@@ -125,7 +107,6 @@ def create_SD_traj_dict(dataset):
 def anomaly_injection_switch(random_seed, sd_traj_count_dict, test_percent, G, switch_percent, connect):
     random.seed(random_seed)
 
-    # 选择一部分 SD
     sd_keys = list(sd_traj_count_dict.keys())
     sd_number = round(len(sd_keys) * test_percent)
     selected_sd_ksys = random.sample(sd_keys, sd_number)
@@ -192,7 +173,6 @@ def generate_labels_switch(switch_anomaly_dict, sd_traj_dict, switch_percent, ra
         sd = (switch_traj[0], switch_traj[-1])
         sd_trajs = sd_traj_dict[sd]
 
-        # 标记头部和尾部的正常部分
         simi_traj_dict = {}
         traj_label_dict = {}
         for traj in sd_trajs:
