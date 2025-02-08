@@ -1,6 +1,6 @@
 # RECAST
 
-This is the implementation code of RECAST. The implementation is based on Python 3.10 and PyTorch 2.1.1.
+This is the implementation code of RECAST. The implementation is based on Python 3.10 and PyTorch 2.1.1. The source_code folder contains the implementation of the RECAST. The data_preprocessing folder contains the implementation of data preprocessing and anomalous sub-trajectory injection.
 
 # Data
 
