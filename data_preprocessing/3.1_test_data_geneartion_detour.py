@@ -13,10 +13,6 @@ from tqdm import tqdm
 
 
 def define_args():
-    """
-    定义参数
-    """
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--city", type=str)
@@ -44,25 +40,16 @@ def define_args():
 
 
 def load_data(data_path):
-    """
-    读取数据
-    """
     dataset = pkl.load(open(data_path, "rb"))
     return dataset
 
 
 def generate_graph(adjlist_path):
-    """
-    根据邻接列表创建图
-    """
     graph = nx.read_adjlist(adjlist_path, create_using=nx.DiGraph, nodetype=int)
     return graph
 
 
 def plot_road_network(edges_shp_path, nodes_shp_path, plot_path, trajs=None, edge_color="blue"):
-    """
-    绘制地图
-    """ 
     edges_gdf = gpd.read_file(edges_shp_path)
     edges_gdf = edges_gdf.set_index(['u','v','key'])
     nodes_gdf = gpd.read_file(nodes_shp_path)
@@ -101,9 +88,6 @@ def run_find_all_shortest_paths(args):
 
 
 def create_SD_traj_count_dict(dataset):
-    """
-    创建字典, {sd: {traj: count, ...}, ...}
-    """
     sd_traj_count_dict = {}  # {sd_pair: {traj: count}}
     for traj in dataset:
         s = traj[0]
@@ -121,9 +105,6 @@ def create_SD_traj_count_dict(dataset):
 
 
 def create_SD_traj_dict(dataset):
-    """
-    创建字典, {sd: {traj, ...}, ...}
-    """
     sd_traj_dict = {}  # {sd_pair: {traj}}
     for traj in dataset:
         s = traj[0]
@@ -138,9 +119,6 @@ def create_SD_traj_dict(dataset):
 
 
 def create_SD_normalRoad_dict(sd_traj_count_dict, threshold):
-    """
-    创建字典, {sd: {normal road, ...}, ...}
-    """
     sd_normalRoad_dict = {}  # {sd_pair: {normal_road}}
     for sd in sd_traj_count_dict:
         traj_count_dict = sd_traj_count_dict[sd]
@@ -157,29 +135,24 @@ def create_SD_normalRoad_dict(sd_traj_count_dict, threshold):
 def anomaly_injection_detour(random_seed, sd_traj_count_dict, test_percent, G, detour_percent, offset, connect):
     random.seed(random_seed)
     
-    # 选择一部分 SD
     sd_keys = list(sd_traj_count_dict.keys())
     sd_number = round(len(sd_keys) * test_percent)
     selected_sd_ksys = random.sample(sd_keys, sd_number)
 
-    # 注入 detour
     detour_anomaly_dict = []
     for sd in tqdm(selected_sd_ksys):
         traj_count_list = list(sd_traj_count_dict[sd].items())  # [(traj, count)]
         traj_count = random.sample(traj_count_list, 1)[0]
         traj = traj_count[0]
         
-        # 根据注入百分比，获取 detour 长度范围
         detour_length = round(len(traj) * detour_percent)
         tolerance_lengths = [round(len(traj) * (detour_percent - 0.05)), round(len(traj) * (detour_percent + 0.05))]
-        
-        # 随机找到断点
+
         p1 = random.randrange(1, len(traj) - detour_length)
         p2 = p1 + detour_length
         r1 = traj[p1]
         r2 = traj[p2]
 
-        # 基于 offset，找到断点旁边的两个路集
         k_hop_neighbors_1 = []
         for n, length in nx.single_source_shortest_path_length(G, r1, cutoff=offset).items():
             if length == offset:
@@ -192,14 +165,12 @@ def anomaly_injection_detour(random_seed, sd_traj_count_dict, test_percent, G, d
         if len(k_hop_neighbors_1) == 0 or len(k_hop_neighbors_2) == 0:
             continue
 
-        # 然后连接这两条路，找到 detour 的主要部分
         detour_path = None
         connect_set = []
         for dr1 in k_hop_neighbors_1:
             for dr2 in k_hop_neighbors_2:
                 if nx.has_path(G, dr1, dr2):
                     connect_set.append((G, dr1, dr2))
-        # 如果不连接
         if not connect:
             dr1_dr2_paths = []
 
@@ -213,7 +184,6 @@ def anomaly_injection_detour(random_seed, sd_traj_count_dict, test_percent, G, d
                 if len(dr1_dr2_paths) != 0:
                     detour_path = random.sample(dr1_dr2_paths, 1)[0]
                     break
-        # 如果连接
         else:
             # new_connect_set = []
             # for dr_tuple in connect_set:
@@ -267,7 +237,6 @@ def generate_labels(detour_anomaly_dict, sd_traj_dict, detour_percent, random_se
         sd = (traj[0], traj[-1])
         sd_trajs = sd_traj_dict[sd]
 
-        # 标记头部和尾部的正常部分
         simi_traj_dict = {}
         traj_label_dict = {}
         for traj in sd_trajs:
